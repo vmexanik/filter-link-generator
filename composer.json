@@ -1,0 +1,20 @@
+{
+  "name": "vmexanik/filterlinkgenerator",
+  "description": "easily generate links for filter by template",
+  "keywords": ["php","links","filters"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Andrii Strohii",
+      "email": "vmexanik.work@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "FilterLinkGenerator": "src/FilterLinkGenerator/"
+    }
+  }
+}
