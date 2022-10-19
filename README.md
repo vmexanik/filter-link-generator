@@ -17,7 +17,7 @@ composer require vmexanik/filterlinkgenerator
 
 use FilterLinkGenerator\FilterLinkGenerator;
 
-$template = "/my-project/my-filter={param}/";
+$template = "/my-project/{my-filter={\$param}/}";
 
 $data = [
     'param' => [
@@ -47,7 +47,7 @@ Array
     [param] => Array
         (
             [first_param] => /my-project/my-filter=second_param_first_param/
-            [second_param] => /my-project/my-filter=/
+            [second_param] => /my-project/
             [third_param] => /my-project/my-filter=second_param_third_param/
         )
 
