@@ -7,9 +7,13 @@
  *
  */
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace FilterLinkGenerator;
+
+use FilterLinkGenerator\Template\Instances\BlockPart;
+use FilterLinkGenerator\Template\Instances\StaticPart;
+use FilterLinkGenerator\Template\Parser;
 
 class FilterLinkGenerator
 {
@@ -22,104 +26,99 @@ class FilterLinkGenerator
     /**
      * @var array
      */
-    private array $data;
-
-    /**
-     * @var array
-     */
     private $vars;
+    private $separator;
+    private $params;
+    private $selectedParams;
+    private array $parsedTemplate;
 
     /**
      * @param string $template template for generating link
      * @param array $data input data for generating link
      */
-    public function __construct(string $template, array $data)
+    public function __construct(string $template = '', array $data = [])
     {
-        preg_match_all('/(?<=\{)\w+(?=})/m', $template, $vars);
-        $this->checkData($vars,$data);
+        require_once '../../vendor/autoload.php';
 
-        $this->template=$template;
-        $this->data=$data;
-        $this->vars=$vars;
+        if (!empty($template))
+            $this->setTemplate($template);
+
+        if (!empty($data['separator']))
+            $this->setSeparator($data['separator']);
+
+        if (!empty($data['selected']))
+            $this->setSelectedParams($data['selected']);
+
+        if (!empty($data['params']))
+            $this->setParams($data['params']);
     }
 
     final public function generateLink(): array
     {
-        $returnLinks=[];
-        foreach ($this->vars[0] as $var){
-            $returnLinks[$var]=$this->addVar($this->template,$var,$this->data[$var]);
+        $parser = new Parser();
+        $this->parsedTemplate = $parser->parseTemplate($this->template);
+
+        $varList=$this->getVarList($this->parsedTemplate);
+
+        foreach ($this->parsedTemplate as $instance) {
+            $instance->setSelected($this->selectedParams[$instance->getVarName()]?:[]);
+            $instance->setSeparator($this->separator);
         }
 
-        return $returnLinks;
-    }
+        foreach ($varList as $var){
+            foreach ($this->params[$var] as $varValue) {
+                $generatedLinks = '';
 
-    private function addVar($template, $var, $data): array
-    {
-        $resultArray=[];
+                foreach ($this->parsedTemplate as $instance) {
+                    $instance->setData($varValue);
 
-        if (!empty($data['selected']))
-            $this->modifyTemplate($template,$var,$data);
-
-        foreach ($data['data'] as $varValue){
-            if (in_array($varValue,$data['selected'])) {
-                $search=[
-                    $varValue.$data['separator'],
-                    $data['separator']."{".$var."}",
-                    "{".$var."}",
-                    $data['separator'].$varValue];
-                $varValueForReplace = '';
-            }else{
-                $search="{".$var."}";
-                $varValueForReplace = $varValue;
+                    if ($var==$instance->getVarName()){
+                        $generatedLinks .= $instance->getData();
+                    }else{
+                        $generatedLinks .= $instance->getOnlySelectedData();
+                    }
+                }
+                $generatedLink[$var][$varValue]=$generatedLinks;
             }
-
-            $resultArray[$varValue]= str_replace([$data['separator'].$data['separator'],'//'],'',str_replace($search,$varValueForReplace, $template));
         }
 
-        return $resultArray;
+        return $generatedLink;
     }
 
-    /**
-     * @param $vars
-     * @param $data
-     * @return void
-     *
-     * input array
-     * 'slug'=>[
-     *      'data'=>[
-     *          array of values like
-     *          abs,
-     *          abe,
-     *          brembo....
-     *      ],
-     *      'selected'=>[
-     *          array of selected values like
-     *          abs,
-     *          abe
-     *      ],
-     *      'delimiter'=>''
-     * ]
-     */
-
-    private function checkData($vars, $data)
+    private function generatePartFromTemplate($instance): string
     {
-        if (empty($vars[0])){
-            throw new \InvalidArgumentException("Template must have minimum one var");
-        }
-
-        foreach ($vars[0] as $var){
-            if (!is_array($data[$var]) || !is_array($data[$var]['data']))
-                throw new \InvalidArgumentException('data to replace variable {'.$var.'} must be an array');
-
-            if (empty($data[$var]) || empty($data[$var]['data']))
-                throw new \InvalidArgumentException('variable {'.$var.'} has no data to replace');
-        }
+        return $instance->getData();
     }
 
-    private function modifyTemplate(&$template, $var, $data): void
+    public function setTemplate(string $template)
     {
-        $allSeletedItemsOnSlug=implode($data['separator'],$data['selected']);
-        $replacedTemplate=str_replace('{'.$var.'}',$allSeletedItemsOnSlug.$data['separator'].'{'.$var.'}', $template);
-        $template=$replacedTemplate;
+        $this->template = $template;
     }
+
+    public function setSeparator(string $separator)
+    {
+        $this->separator = $separator;
+    }
+
+    public function setSelectedParams(array $selectedParams)
+    {
+        $this->selectedParams = $selectedParams;
+    }
+
+    public function setParams(array $params)
+    {
+        $this->params = $params;
+    }
+
+    private function getVarList(array $parsedTemplate): array
+    {
+        $varList=[];
+
+        foreach ($parsedTemplate as $item){
+            $varList[]=$item->getVarName();
+        }
+
+        return $varList;
+    }
+
 }

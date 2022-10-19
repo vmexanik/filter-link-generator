@@ -4,23 +4,40 @@ require_once '../../src/FilterLinkGenerator.php';
 
 use FilterLinkGenerator\FilterLinkGenerator;
 
-$template = "/my-project/my-filter={param}/";
+$template = "/my-project/{my-filter={\$param}/}{b/{\$brand}}";
 
 $data = [
-    'param' => [
-        'data' => [
+    'data' => [
+        'param' => [
             'first_param',
             'second_param',
             'third_param'
         ],
-        'selected' => [
-            'second_param'
+        'brand' => [
+            'ate',
+            'bosch',
+            'abs'
+        ]
+    ],
+    'selected' => [
+        'param'=>[
+            'second_param',
+            'third_param'
         ],
-        'separator' => '_'
-    ]
+        'brand' => [
+            'ate',
+            'bosch',
+            'abs'
+        ]
+    ],
+    'separator' => '_'
 ];
 
-$filterLinks = new FilterLinkGenerator($template, $data);
+$filterLinks = new FilterLinkGenerator();
+$filterLinks->setTemplate($template);
+$filterLinks->setSeparator($data['separator']);
+$filterLinks->setSelectedParams($data['selected']);
+$filterLinks->setParams($data['data']);
 
 $generatedLinks = $filterLinks->generateLink();
 
