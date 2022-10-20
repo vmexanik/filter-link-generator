@@ -38,8 +38,6 @@ class FilterLinkGenerator
      */
     public function __construct(string $template = '', array $data = [])
     {
-        require_once '../../vendor/autoload.php';
-
         if (!empty($template))
             $this->setTemplate($template);
 
