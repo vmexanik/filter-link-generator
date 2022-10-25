@@ -8,7 +8,7 @@ use FilterLinkGenerator\Template\Instances\StaticPart;
 class Parser
 {
     const REGEXP_VAR="/\{\$[\w\-+*\/]+\}/mi";
-    const REGEXP_BLOCK="/\{[\w\/\-=]*[\w\{\}\$\-=]+[\w\/\-=]*\}/m";
+    const REGEXP_BLOCK='/{[\w\/\-_=]*{\$[a-z\-_0-9]+}[\w\/\-_=]*}/mi';
 
     public array $template=[];
 

@@ -1,6 +1,6 @@
 <?php
 
-require_once '../../src/FilterLinkGenerator.php';
+require_once '../../vendor/autoload.php';
 
 use FilterLinkGenerator\FilterLinkGenerator;
 
