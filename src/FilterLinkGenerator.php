@@ -53,6 +53,7 @@ class FilterLinkGenerator
 
     final public function generateLink(): array
     {
+        $generatedLink=[];
         $parser = new Parser();
         $this->parsedTemplate = $parser->parseTemplate($this->template);
 
