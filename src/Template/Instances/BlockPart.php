@@ -27,7 +27,7 @@ class BlockPart implements TemplatePart
         $this->parse($block);
 
         $this->data = [
-            'data' => preg_replace(['/^\{\[.+\]/m', '/\}$/m'],'',$block),
+            'data' => preg_replace(['/^\{(\[.+\])?/m', '/\}$/m'],'',$block),
             'var' => $this->vars
         ];
     }
