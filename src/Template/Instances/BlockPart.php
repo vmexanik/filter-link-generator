@@ -4,56 +4,84 @@ namespace FilterLinkGenerator\Template\Instances;
 
 class BlockPart implements TemplatePart
 {
+    const REGEX_VAR = "/\{\\$[a-zA-Z_]+\}/mi";
+    const REGEX_VAR_WITHOUT_BLOCK = "/^\{\\$[a-zA-Z_]+\}$/mi";
+
+    const REGEX_CONTROL_CHAR = "/^\{(\[.+\])/miU";
     private array $data;
     private string $separator;
     private array $selectedParams;
 
+    private array $controls=[];
+    /**
+     * @var string[][]
+     */
+    private array $vars;
+
     public function __construct($block)
     {
-        $var = $this->parseVar($block);
+        if ($this->varWithoutBlock($block)){
+            $block=$this->addEmptyBlock($block);
+        }
+
+        $this->parse($block);
+
         $this->data = [
-            'data' => $block,
-            'var' => $var
+            'data' => preg_replace(['/^\{\[.+\]/m', '/\}$/m'],'',$block),
+            'var' => $this->vars
         ];
     }
 
     /**
-     * @return string
+     * @return array
      */
-    public function getData(): string
+    public function getData(): array
     {
-        if (in_array($this->data['varValues'], $this->selectedParams)) {
-            $selectedParts = array_diff($this->selectedParams, [$this->data['varValues']]);
-            $selectedPart = $this->getSelectedPartDataForOnlyStaticPart($selectedParts, $this->separator);
-            $this->data['varValues'] = '';
-        } else {
-            $selectedPart = $this->getSelectedPartData($this->selectedParams, $this->separator);
-        }
+        sort($this->data['varValues']);
 
         $varName = $this->getVarName();
+        $selectedPart=[];
 
-        if (mb_strlen($selectedPart . $this->data['varValues'])>0) {
-            $generatedBlock = str_replace("{\$$varName}", $selectedPart . $this->data['varValues'], $this->data['data']);
-            return mb_substr($generatedBlock, 1, mb_strlen($generatedBlock) - 2);
-        }else{
-            return '';
+        foreach ($this->data['varValues'] as $value){
+            if (in_array($value, $this->selectedParams)) {
+                $selectedParts = array_diff($this->selectedParams, [$value]);
+                $values=$selectedParts;
+            } else {
+                $selectedParts=$this->selectedParams;
+                $values=array_merge($selectedParts,[$value]);
+            }
+
+            sort($values);
+
+            if ($values)
+                $selectedPart[$value]= str_replace("{\$$varName}",implode($this->separator,$values), $this->data['data']);
+            else
+                $selectedPart[$value]='';
         }
+
+        return $selectedPart;
     }
 
-    private function parseVar($block)
+    public function pushControl($param)
     {
-        $re = '/\{\$[\w\-+*\/]+\}/mi';
-        preg_match($re, $block, $vars);
+        $this->controls[]=$param;
+    }
 
-        return $vars;
+    private function parse($block)
+    {
+        preg_match_all(self::REGEX_VAR, $block, $vars);
+        preg_match(self::REGEX_CONTROL_CHAR, $block, $controlChars);
+
+        $this->controls=explode(',',$controlChars[1]);
+        $this->vars=$vars;
     }
 
     public function getVarName(): string
     {
-        return str_replace(['{$', '}'], '', $this->data['var'])[0];
+        return str_replace(['{$', '}'], '', $this->data['var'][0])[0];
     }
 
-    public function setData(string $data)
+    public function setData(array $data)
     {
         $this->data['varValues'] = $data;
     }
@@ -78,8 +106,7 @@ class BlockPart implements TemplatePart
         } else {
             $varName = $this->getVarName();
             $selectedValues = $this->getSelectedPartDataForOnlyStaticPart($this->selectedParams, $this->separator);
-            $generatedBlock = str_replace("{\$$varName}", $selectedValues, $this->data['data']);
-            return mb_substr($generatedBlock, 1, mb_strlen($generatedBlock) - 2);
+            return str_replace("{\$$varName}", $selectedValues, $this->data['data']);
         }
     }
 
@@ -94,5 +121,19 @@ class BlockPart implements TemplatePart
             return implode($separator, $data);
         else
             return '';
+    }
+
+    private function varWithoutBlock($block): bool
+    {
+        if (preg_match(self::REGEX_VAR_WITHOUT_BLOCK, $block)){
+            return true;
+        }
+
+        return false;
+    }
+
+    private function addEmptyBlock($block): string
+    {
+        return "{$block}";
     }
 }

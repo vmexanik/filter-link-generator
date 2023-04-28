@@ -47,37 +47,45 @@ class FilterLinkGenerator
         if (!empty($data['selected']))
             $this->setSelectedParams($data['selected']);
 
-        if (!empty($data['params']))
-            $this->setParams($data['params']);
+        if (!empty($data['vars']))
+            $this->setParams($data['vars']);
     }
 
     final public function generateLink(): array
     {
-        $generatedLink=[];
+        $generatedLink = [];
         $parser = new Parser();
         $this->parsedTemplate = $parser->parseTemplate($this->template);
 
-        $varList=$this->getVarList($this->parsedTemplate);
+        $varList = $this->getVarList($this->parsedTemplate);
 
         foreach ($this->parsedTemplate as $instance) {
-            $instance->setSelected($this->selectedParams[$instance->getVarName()]?:[]);
-            $instance->setSeparator($this->separator);
+            $varName = $instance->getVarName();
+            $instance->setSelected($this->selectedParams[$varName] ?: []);
+            $instance->setSeparator($this->params[$varName]['separator']);
+            $instance->setData($this->params[$varName]['values'] ?: []);
         }
 
-        foreach ($varList as $var){
-            foreach ($this->params[$var] as $varValue) {
-                $generatedLinks = '';
+        foreach ($varList as $var) {
+            $result=[];
+            foreach ($this->parsedTemplate as $instance) {
+                if ($var == $instance->getVarName()) {
+                    $result[] = $instance->getData();
+                } else {
+                    $result[] = $instance->getOnlySelectedData();
+                }
+            }
 
-                foreach ($this->parsedTemplate as $instance) {
-                    $instance->setData($varValue);
-
-                    if ($var==$instance->getVarName()){
-                        $generatedLinks .= $instance->getData();
-                    }else{
-                        $generatedLinks .= $instance->getOnlySelectedData();
+            foreach ($this->params[$var]['values'] as $varValue) {
+                $link = '';
+                foreach ($result as $item) {
+                    if (is_string($item)) {
+                        $link .= $item;
+                    } elseif (is_array($item)) {
+                        $link .= $item[$varValue];
                     }
                 }
-                $generatedLink[$var][$varValue]=$generatedLinks;
+                $generatedLink[$var][$varValue] = $link;
             }
         }
 
@@ -111,13 +119,13 @@ class FilterLinkGenerator
 
     private function getVarList(array $parsedTemplate): array
     {
-        $varList=[];
+        $varList = [];
 
-        foreach ($parsedTemplate as $item){
-            $varList[]=$item->getVarName();
+        foreach ($parsedTemplate as $item) {
+            $varList[] = $item->getVarName();
         }
 
-        return $varList;
+        return array_diff($varList, ['']);
     }
 
 }

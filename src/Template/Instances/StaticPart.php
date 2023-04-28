@@ -11,7 +11,7 @@ class StaticPart implements TemplatePart
         $this->data=$staticText;
     }
 
-    public function getData(): string
+    public function getData()
     {
         return $this->data;
     }
@@ -21,7 +21,7 @@ class StaticPart implements TemplatePart
         return '';
     }
 
-    public function setData(string $data)
+    public function setData(array $data)
     {
 
     }
@@ -36,7 +36,7 @@ class StaticPart implements TemplatePart
 
     }
 
-    public function getOnlySelectedData(): string
+    public function getOnlySelectedData()
     {
         return $this->getData();
     }

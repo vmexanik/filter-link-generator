@@ -6,11 +6,11 @@ interface TemplatePart
 {
     public function __construct($data);
 
-    public function getData(): string;
+    public function getData();
 
     public function getVarName(): string;
 
-    public function setData(string $data);
+    public function setData(array $data);
 
     public function setSelected(array $selectedParams);
 

@@ -4,23 +4,29 @@ require_once '../../vendor/autoload.php';
 
 use FilterLinkGenerator\FilterLinkGenerator;
 
-$template = "/my-project/{my-filter={\$param}/}{b/{\$brand}}";
+$template = "/my-project/{[e]my-filter={\$param}}{[e]b/{\$brand}}/";
 
 $data = [
-    'data' => [
+    'vars' => [
         'param' => [
-            'first_param',
-            'second_param',
-            'third_param'
+            'values' => [
+                'first_param',
+                'second_param',
+                'third_param'
+            ],
+            'separator'=>'-'
         ],
         'brand' => [
-            'ate',
-            'bosch',
-            'abs'
+            'values'=>[
+                'ate',
+                'bosch',
+                'abs'
+            ],
+            'separator'=>'-'
         ]
     ],
     'selected' => [
-        'param'=>[
+        'param' => [
             'second_param',
             'third_param'
         ],
@@ -30,15 +36,10 @@ $data = [
             'abs'
         ]
     ],
-    'separator' => '_'
+    'block_separator' => '_'
 ];
 
-$filterLinks = new FilterLinkGenerator();
-$filterLinks->setTemplate($template);
-$filterLinks->setSeparator($data['separator']);
-$filterLinks->setSelectedParams($data['selected']);
-$filterLinks->setParams($data['data']);
-
+$filterLinks = new FilterLinkGenerator($template,$data);
 $generatedLinks = $filterLinks->generateLink();
 
 print_r($generatedLinks);
