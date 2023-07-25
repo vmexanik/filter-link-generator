@@ -4,8 +4,8 @@ namespace FilterLinkGenerator\Template\Instances;
 
 class BlockPart implements TemplatePart
 {
-    const REGEX_VAR = "/\{\\$[a-zA-Z_]+\}/mi";
-    const REGEX_VAR_WITHOUT_BLOCK = "/^\{\\$[a-zA-Z_]+\}$/mi";
+    const REGEX_VAR = "/\{\\$[a-zA-Z_0-9]+\}/mi";
+    const REGEX_VAR_WITHOUT_BLOCK = "/^\{\\$[a-zA-Z_0-9]+\}$/mi";
 
     const REGEX_CONTROL_CHAR = "/^\{(\[.+\])/miU";
     private array $data;
