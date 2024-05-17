@@ -138,6 +138,10 @@ class Lexer
             }
         }
 
+        if (!empty($static)){
+            $template[]=new StaticPart($static);
+        }
+
         return $template;
     }
 
